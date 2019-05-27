@@ -139,6 +139,17 @@ public final strictfp class R1Interval {
     return y.lo() < hi() && lo() < y.hi() && lo() < hi() && y.lo() <= y.hi();
   }
 
+  /**
+   * Return the Hausdorff distance to the given interval 'y'. For two
+   * R1Intervals x and y, this distance is defined as
+   *     h(x, y) = max_{p in x} min_{q in y} d(p, q).
+   */
+  public double getDirectedHausdorffDistance(R1Interval y) {
+    if (isEmpty()) return 0.0;
+    if (y.isEmpty()) return Double.MAX_VALUE;
+    return Math.max(0.0, Math.max(hi() - y.hi(), y.lo() - lo()));
+  }
+
   /** Expand the interval so that it contains the given point "p". */
   public R1Interval addPoint(double p) {
     if (isEmpty()) {
@@ -150,6 +161,30 @@ public final strictfp class R1Interval {
     } else {
       return new R1Interval(lo(), hi());
     }
+  }
+
+ /** Expand the interval so that it contains the given interval "y". */
+  public R1Interval addInterval(R1Interval y) {
+    if (y.isEmpty()) {
+      return new R1Interval(lo(),hi());
+    } else if (isEmpty() || (y.lo() < lo() && y.hi() > hi())) { 
+      return new R1Interval(y.lo(),y.hi());
+    } else if (y.lo() < lo() ) {
+      return new R1Interval(y.lo(),hi());
+    } else if (y.hi() > hi()){
+      return new R1Interval(lo(), y.hi());
+    } else {
+      return new R1Interval(lo(),hi());
+    }
+  }
+
+  /**
+   * Return the closest point in the interval to the given point "p".
+   * The interval must be non-empty.
+   */
+  public double project(double p) {
+    Preconditions.checkState(!isEmpty(), "empty interval");
+    return Math.max(lo(), Math.min(hi(), p));
   }
 
   /**
@@ -185,6 +220,7 @@ public final strictfp class R1Interval {
    */
   public R1Interval intersection(R1Interval y) {
     return new R1Interval(Math.max(lo(), y.lo()), Math.min(hi(), y.hi()));
+
   }
 
   @Override
